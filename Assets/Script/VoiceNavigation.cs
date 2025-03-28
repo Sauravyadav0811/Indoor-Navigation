@@ -1,69 +1,92 @@
-using UnityEngine;
-using UnityEngine.AI;
+﻿using UnityEngine;
+using TMPro;  // Import TextMeshPro Namespace
 using System.Collections;
+using System.Collections.Generic;
 
 public class VoiceNavigation : MonoBehaviour
 {
-    private NavMeshPath path;
-    private int currentWaypoint = 0;
-    [SerializeField] private Transform player;
+    public TMP_Dropdown sourceDropdown;  // Use TMP_Dropdown instead of Dropdown
+    public TMP_Dropdown destinationDropdown;
+    public GameObject toggleLineButton; // Assign the button that triggers ToggleLine
+    public AndroidSpeechRecognition speechRecognizer; // Assign in Inspector
 
-    private AndroidJavaObject tts; // Android Text-to-Speech
+    private bool isSettingSource = true;
+    private float waitTime = 10f;
 
-    private void Start()
+    void Start()
     {
-        path = new NavMeshPath();
-        // Initialize Android TTS
-        AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-        AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-        tts = new AndroidJavaObject("android.speech.tts.TextToSpeech", currentActivity, null);
-
-        StartCoroutine(CheckPosition());
+        Invoke("AskForSource", 2f);
     }
 
-    private IEnumerator CheckPosition()
+    void AskForSource()
     {
-        while (true)
+        isSettingSource = true;
+        Debug.Log("🎤 Please say your source location...");
+        StartCoroutine(StartSpeechRecognition());
+    }
+
+    void AskForDestination()
+    {
+        isSettingSource = false;
+        Debug.Log("🎤 Please say your destination location...");
+        StartCoroutine(StartSpeechRecognition());
+    }
+
+    IEnumerator StartSpeechRecognition()
+    {
+        speechRecognizer.StartListening(); // Calls the Android plugin
+        yield return new WaitForSeconds(3); // Wait for speech result
+    }
+
+    public void ProcessSpeechResult(string text)
+    {
+        Debug.Log("Recognized: " + text);
+        List<string> options = GetDropdownOptions();
+
+        int index = options.FindIndex(option => option.ToLower().Contains(text.ToLower()));
+
+        if (index != -1)
         {
-            if (path.corners.Length > 1 && currentWaypoint < path.corners.Length)
+            if (isSettingSource)
             {
-                float distance = Vector3.Distance(player.position, path.corners[currentWaypoint]);
-
-                if (distance < 1.5f) // Player reaches waypoint
-                {
-                    GiveDirection(currentWaypoint);
-                    currentWaypoint++;
-                }
+                sourceDropdown.value = index;  // Select dropdown option
+                Debug.Log("✅ Source set to: " + options[index]);
+                Invoke("AskForDestination", waitTime);
             }
-            yield return new WaitForSeconds(2f); // Check every 2 seconds
-        }
-    }
-
-    private void GiveDirection(int index)
-    {
-        if (index < path.corners.Length - 1)
-        {
-            Vector3 direction = path.corners[index + 1] - path.corners[index];
-            float angle = Vector3.SignedAngle(player.forward, direction, Vector3.up);
-            string message;
-
-            if (angle > 30)
-                message = "Turn right";
-            else if (angle < -30)
-                message = "Turn left";
             else
-                message = "Go straight";
+            {
+                destinationDropdown.value = index;  // Select dropdown option
+                Debug.Log("✅ Destination set to: " + options[index]);
 
-            Speak(message);
+                Invoke("StartNavigation", 5f); // Start navigation after 5 seconds
+            }
         }
         else
         {
-            Speak("You have reached your destination.");
+            Debug.LogWarning("❌ Location not recognized. Please try again.");
         }
     }
 
-    private void Speak(string text)
+    void StartNavigation()
     {
-        tts.Call("speak", text, 0, null, null);
+        Debug.Log("🚀 Starting navigation...");
+        if (toggleLineButton != null)
+        {
+            toggleLineButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+        }
+        else
+        {
+            Debug.LogError("⚠️ Toggle Line Button is not assigned in the Inspector!");
+        }
+    }
+
+    List<string> GetDropdownOptions()
+    {
+        List<string> options = new List<string>();
+        foreach (var option in sourceDropdown.options)
+        {
+            options.Add(option.text);
+        }
+        return options;
     }
 }

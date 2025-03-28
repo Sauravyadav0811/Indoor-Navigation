@@ -1,58 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yourcompany.yourapp">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-	<!-- ✅ Required Permissions -->
+	<!-- Add Microphone Permission Here -->
 	<uses-permission android:name="android.permission.RECORD_AUDIO"/>
-	<uses-permission android:name="android.permission.INTERNET"/>
-	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-	<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-	<uses-permission android:name="android.permission.BLUETOOTH"/>
-	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-	<uses-permission android:name="android.permission.CALL_PHONE"/>
 
-	<uses-feature android:name="android.hardware.microphone" android:required="false"/>
-
-	<application
-        android:allowBackup="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-        android:usesCleartextTraffic="true">
-
-		<!-- ✅ Main Activity -->
+	<application>
+		<!--Used when Application Entry is set to Activity, otherwise remove this activity block-->
 		<activity android:name="com.unity3d.player.UnityPlayerActivity"
-            android:label="@string/app_name"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-            android:launchMode="singleTask">
+                  android:theme="@style/UnityThemeSelector">
 			<intent-filter>
-				<action android:name="android.intent.action.MAIN"/>
-				<category android:name="android.intent.category.LAUNCHER"/>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
+			<meta-data android:name="unityplayer.UnityActivity" android:value="true" />
 		</activity>
-
-		<!-- ✅ Voice Navigation Service -->
-		<service android:name=".VoiceNavigationService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location"/>
-
-		<!-- ✅ Speech Recognition Service -->
-		<service android:name=".SpeechRecognitionService"
-            android:permission="android.permission.BIND_SPEECH_RECOGNITION_SERVICE"
-            android:exported="false"/>
-
-		<!-- ✅ Broadcast Receiver (For Voice Commands) -->
-		<receiver android:name=".VoiceCommandReceiver"
-            android:enabled="true"
-            android:exported="false">
+		<!--Used when Application Entry is set to GameActivity, otherwise remove this activity block-->
+		<activity android:name="com.unity3d.player.UnityPlayerGameActivity"
+                  android:theme="@style/BaseUnityGameActivityTheme">
 			<intent-filter>
-				<action android:name="android.speech.action.RECOGNIZE_SPEECH"/>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
-		</receiver>
-
-		<!-- ✅ Metadata for Voice Recognition -->
-		<meta-data android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version"/>
-
+			<meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+			<meta-data android:name="android.app.lib_name" android:value="game" />
+		</activity>
 	</application>
 </manifest>

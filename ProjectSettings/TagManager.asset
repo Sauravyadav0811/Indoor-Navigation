@@ -13,6 +13,9 @@ TagManager:
   - UI
   - 
   - 
+  - Floor
+  - Wall
+  - Indicator
   - 
   - 
   - 
@@ -33,9 +36,6 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - XR Simulation
   - 
   m_SortingLayers:
   - name: Default
