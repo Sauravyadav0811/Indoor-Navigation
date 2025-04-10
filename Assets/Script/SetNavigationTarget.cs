@@ -159,4 +159,8 @@ public class SetNavigationTarget : MonoBehaviour
             UpdatePath();
         }
     }
+    public void DrawPath()
+    {
+        ToggleVisibility(); // This method already handles showing/hiding the path
+    }
 }

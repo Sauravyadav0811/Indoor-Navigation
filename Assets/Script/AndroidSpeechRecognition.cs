@@ -1,39 +1,41 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Android;
-using System.Collections;
+using System;
 
-public class AndroidSpeechRecognition : MonoBehaviour
+namespace CustomSpeechRecognition
 {
-    public VoiceNavigation voiceNavigation;  // Assign in Inspector
-
-    void Start()
+    public class AndroidSpeechRecognizer : MonoBehaviour
     {
-        // Request microphone permission
-        if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
+        public static AndroidSpeechRecognizer Instance;
+
+        public static Action<string> OnResultCallback;
+
+        private AndroidJavaObject activityContext;
+        private AndroidJavaObject speechPlugin;
+
+        void Awake()
         {
-            Permission.RequestUserPermission(Permission.Microphone);
-        }
-    }
+            if (Instance == null)
+                Instance = this;
 
-    public void StartListening()
-    {
-        if (Application.platform == RuntimePlatform.Android)
+#if UNITY_ANDROID && !UNITY_EDITOR
+            AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            activityContext = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            speechPlugin = new AndroidJavaObject("com.yourcompany.speechplugin.SpeechPlugin", activityContext);
+#endif
+        }
+
+        public void StartRecording(string message, string language)
         {
-            using (AndroidJavaClass jc = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-            using (AndroidJavaObject activity = jc.GetStatic<AndroidJavaObject>("currentActivity"))
-            using (AndroidJavaObject intent = new AndroidJavaObject("android.speech.RecognizerIntent"))
-            {
-                intent.Call<AndroidJavaObject>("putExtra", "android.speech.extra.LANGUAGE_MODEL", "android.speech.extra.LANGUAGE_MODEL_FREE_FORM");
-                intent.Call<AndroidJavaObject>("putExtra", "android.speech.extra.PROMPT", "Speak now...");
-
-                activity.Call("startActivityForResult", intent, 10);
-            }
+#if UNITY_ANDROID && !UNITY_EDITOR
+            speechPlugin.Call("startListening", message, language);
+#endif
         }
-    }
 
-    // Call this from Unity's Android Plugin
-    public void ReceiveSpeechResult(string recognizedText)
-    {
-        voiceNavigation.ProcessSpeechResult(recognizedText);
+        public void onSpeechResult(string recognizedText)
+        {
+            Debug.Log("Speech result received: " + recognizedText);
+            OnResultCallback?.Invoke(recognizedText);
+        }
     }
 }
